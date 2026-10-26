@@ -109,8 +109,6 @@ function renderMovies(movies, append = false) {
           <th>Year</th>
           <th>Genre</th>
           <th>Actors</th>
-          <th>Likes</th>
-          <th>Reviews</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -127,8 +125,6 @@ function renderMovies(movies, append = false) {
         movie.year,
         movie.genre,
         movie.actors.join(", "),
-        movie.likes,
-        movie.reviews.length
       ];
 
       values.forEach((value) => {
@@ -142,7 +138,7 @@ function renderMovies(movies, append = false) {
       const detailsRow = document.createElement("tr");
       const detailsCell = document.createElement("td");
 
-      detailsCell.colSpan = 7;
+      detailsCell.colSpan = 5;
       detailsCell.innerHTML = `
         <div class="movie-details-layout" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
             <div class="trailer-container" style="flex: 0 0 480px; max-width: 100%;">
@@ -165,7 +161,8 @@ function renderMovies(movies, append = false) {
 
                 <strong>Cast:</strong>
                 <p>${movie.actors.join(", ")}</p>
-
+                <strong>Likes:</strong>
+                <p>${movie.likes}</p>
                 <strong>Reviews:</strong>
                 <div class="movie-reviews"></div>
              </div>
@@ -203,19 +200,51 @@ function renderMovies(movies, append = false) {
     movies.forEach((movie) => {
       const card = document.createElement("article");
       card.className = "movie-card";
+
       card.innerHTML = `
+        <p class="sequence"></p>
         <h3></h3>
-        <p></p>
-        <p></p>
-        <p></p>
+        <p class="movie-meta"></p>
+        <p class="movie-actors"></p>
+
+        <div class="movie-details" hidden>
+          <video controls preload="metadata"
+            tyle="width:100%; max-width:480px; height:auto;">
+          </video>
+          <p class="movie-likes"></p>
+          <div class="movie-reviews"></div>
+        </div>
       `;
 
+      card.querySelector(".sequence").textContent =
+        `#${movie.sequence + 1}`;
       card.querySelector("h3").textContent = movie.title;
-      card.children[0].textContent = movie.title;
-      card.children[1].textContent = `${movie.year} · ${movie.genre}`;
-      card.children[2].textContent = `Actors: ${movie.actors.join(", ")}`;
-      card.children[3].textContent =
-        `Likes: ${movie.likes} · Reviews: ${movie.reviews.length}`;
+      card.querySelector(".movie-meta").textContent =
+        `${movie.year} · ${movie.genre}`;
+      card.querySelector(".movie-actors").textContent =
+        `Actors: ${movie.actors.join(", ")}`;
+
+      card.querySelector("video").src = movie.trailer;
+      card.querySelector(".movie-likes").textContent =
+        `Likes: ${movie.likes}`;
+
+      const reviewsContainer = card.querySelector(".movie-reviews");
+      const reviewsHeading = document.createElement("strong");
+      reviewsHeading.textContent = "Reviews:";
+      reviewsContainer.appendChild(reviewsHeading);
+
+      movie.reviews.forEach((review) => {
+        const reviewItem = document.createElement("p");
+        reviewItem.textContent = `${review.author}: ${review.text}`;
+        reviewsContainer.appendChild(reviewItem);
+      });
+
+      card.addEventListener("click", (event) => {
+        if (event.target.closest(".movie-details")) return;
+
+        const details = card.querySelector(".movie-details");
+        details.hidden = !details.hidden;
+      });
 
       gallery.appendChild(card);
     });
