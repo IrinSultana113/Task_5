@@ -1,0 +1,32 @@
+
+<div class="container">
+  <header class="toolbar">
+    <h1>Movie Store</h1>
+
+    <label for="locale">Language</label>
+    <select id="locale">
+      <option value="en-US">English (US)</option>
+      <option value="de-DE">German (Germany)</option>
+    </select>
+
+    <label for="seed">Seed</label>
+    <input id="seed" type="number" min="0" value="589334323">
+
+    <button id="random-seed" type="button">Random seed</button>
+
+    <label for="likes">Likes average</label>
+    <input id="likes" type="number" min="0" max="10" step="0.1" value="4">
+
+    <label for="reviews">Reviews average</label>
+    <input id="reviews" type="number" min="0" max="10" step="0.1" value="2">
+
+    <button id="table-view" type="button">Table View</button>
+    <button id="gallery-view" type="button">Gallery View</button>
+  </header>
+
+  <p id="status">Movie Store is ready.</p>
+
+  <main id="movie-container">
+    Loading movies...
+  </main>
+</div>

@@ -1,0 +1,32 @@
+
+{
+  "locale": "de-DE",
+  "genres": [
+    "Drama",
+    "Komödie",
+    "Thriller",
+    "Science-Fiction",
+    "Romanze",
+    "Action",
+    "Mystery",
+    "Abenteuer",
+    "Krimi",
+    "Fantasy",
+    "Horror",
+    "Dokumentation"
+  ],
+  "titles": [
+    "Das letzte Geheimnis",
+    "Die verlorene Stadt",
+    "Schatten der Vergangenheit",
+    "Ein Winter in Berlin",
+    "Der letzte Zeuge",
+    "Die Reise nach Hause",
+    "Unter fremdem Himmel",
+    "Das Geheimnis des Waldes",
+    "Ein Leben voller Fragen",
+    "Die Stunde der Wahrheit"
+  ]
+}
+
+

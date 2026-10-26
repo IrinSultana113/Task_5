@@ -1,0 +1,17 @@
+{
+  "locale": "en-US",
+  "genres": [
+    "Drama",
+    "Comedy",
+    "Thriller",
+    "Science Fiction",
+    "Romance",
+    "Action",
+    "Mystery",
+    "Adventure",
+    "Crime",
+    "Fantasy",
+    "Horror",
+    "Documentary"
+  ]
+}
