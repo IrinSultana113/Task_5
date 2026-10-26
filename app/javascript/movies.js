@@ -1,4 +1,3 @@
-
 const container = document.getElementById("movie-container");
 const statusText = document.getElementById("status");
 
@@ -12,15 +11,23 @@ const tableButton = document.getElementById("table-view");
 const galleryButton = document.getElementById("gallery-view");
 
 let currentView = "table";
+let currentPage = 1;
+const pageSize = 30;
+let galleryPage = 1;
+let isLoading = false;
+let hasMore = true;
+
 
 async function loadMovies() {
+  if (isLoading) return;
+  isLoading = true;
   statusText.textContent = "Loading movies...";
 
   const params = new URLSearchParams({
     locale: localeInput.value,
     seed: seedInput.value || "589334323",
-    page: "1",
-    per_page: "50",
+    page: (currentView === "gallery" ? galleryPage : currentPage).toString(),
+    per_page: pageSize.toString(),
     likes_average: likesInput.value,
     reviews_average: reviewsInput.value
   });
@@ -33,16 +40,62 @@ async function loadMovies() {
       throw new Error(data.error || "Could not load movies");
     }
 
-    renderMovies(data.movies);
-    statusText.textContent = `Loaded ${data.movies.length} movies`;
+    if (currentView === "gallery") {
+      galleryPage++;
+      renderMovies(data.movies, true);
+    } else {
+     renderMovies(data.movies);
+    }
+    if (currentView === "table") {
+      updatePagination(data);
+    }
+
+    if (currentView === "gallery") {
+      statusText.textContent = "";
+    } else {
+      statusText.textContent =
+        `Page ${currentPage} · Showing ${data.movies.length} movies`;
+    }
   } catch (error) {
     container.textContent = error.message;
     statusText.textContent = "Failed to load movies";
   }
+  finally {
+  isLoading = false;
+  }
 }
 
-function renderMovies(movies) {
-  container.replaceChildren();
+// Added: Pagination functionality
+function updatePagination(data) {
+  const previousButton = document.getElementById("previous-page");
+  const nextButton = document.getElementById("next-page");
+
+  if (!previousButton || !nextButton) return;
+
+  previousButton.disabled = currentPage === 1;
+
+  // The API must return has_more: true/false.
+  nextButton.disabled = data.has_more === false;
+
+  previousButton.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      loadMovies();
+    }
+  };
+
+  nextButton.onclick = () => {
+    if (data.has_more !== false) {
+      currentPage++;
+      loadMovies();
+    }
+  };
+}
+
+function renderMovies(movies, append = false) {
+  if (currentView === "table" || !append) {
+    container.replaceChildren();
+  }
 
   if (currentView === "table") {
     const table = document.createElement("table");
@@ -78,7 +131,6 @@ function renderMovies(movies) {
         movie.reviews.length
       ];
 
-      
       values.forEach((value) => {
         const cell = document.createElement("td");
         cell.textContent = value;
@@ -91,7 +143,6 @@ function renderMovies(movies) {
       const detailsCell = document.createElement("td");
 
       detailsCell.colSpan = 7;
-      
       detailsCell.innerHTML = `
         <div class="movie-details-layout" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
             <div class="trailer-container" style="flex: 0 0 480px; max-width: 100%;">
@@ -141,8 +192,13 @@ function renderMovies(movies) {
 
     container.appendChild(table);
   } else {
-    const gallery = document.createElement("div");
-    gallery.className = "gallery";
+    let gallery = container.querySelector(".gallery");
+
+    if (!gallery || !append) {
+      gallery = document.createElement("div");
+      gallery.className = "gallery";
+      container.appendChild(gallery);
+    }
 
     movies.forEach((movie) => {
       const card = document.createElement("article");
@@ -158,38 +214,61 @@ function renderMovies(movies) {
       card.children[0].textContent = movie.title;
       card.children[1].textContent = `${movie.year} · ${movie.genre}`;
       card.children[2].textContent = `Actors: ${movie.actors.join(", ")}`;
-      card.children[3].textContent = `Likes: ${movie.likes} · Reviews: ${movie.reviews.length}`;
+      card.children[3].textContent =
+        `Likes: ${movie.likes} · Reviews: ${movie.reviews.length}`;
 
       gallery.appendChild(card);
     });
-
-    container.appendChild(gallery);
   }
 }
 
 [localeInput, seedInput, likesInput, reviewsInput].forEach((input) => {
-  input.addEventListener("change", loadMovies);
+  input.addEventListener("change", () => {
+    currentPage = 1;
+    loadMovies();
+  });
 });
+
 
 randomSeedButton.addEventListener("click", () => {
   const bytes = new Uint32Array(2);
   crypto.getRandomValues(bytes);
+  const randomSeed =
+    (BigInt(bytes[0] & 0xffff) << 32n) | BigInt(bytes[1]);
 
-  seedInput.value = (
-    BigInt(bytes[0]) * 4294967296n + BigInt(bytes[1])
-  ).toString();
+  seedInput.value = randomSeed.toString();
 
+  currentPage = 1;
   loadMovies();
 });
 
+
 tableButton.addEventListener("click", () => {
   currentView = "table";
+  currentPage = 1;
+  container.replaceChildren();
+  document.getElementById("pagination").hidden = false;
+  window.scrollTo(0, 0);
   loadMovies();
 });
 
 galleryButton.addEventListener("click", () => {
   currentView = "gallery";
+  galleryPage = 1;
+  container.replaceChildren();
+  document.getElementById("pagination").hidden = true;
+  window.scrollTo(0, 0);
   loadMovies();
 });
-
+window.addEventListener("scroll", () => {
+  if (
+    currentView === "gallery" &&
+    !isLoading &&
+    hasMore &&
+    window.innerHeight + window.scrollY >=
+      document.documentElement.scrollHeight - 300
+  ) {
+    loadMovies();
+  }
+});
 loadMovies();

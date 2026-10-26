@@ -14,7 +14,7 @@ class MoviesController < ApplicationController
     end
 
     page = [(params[:page] || 1).to_i, 1].max
-    per_page = [[(params[:per_page] || 20).to_i, 1].max, 100].min
+    per_page = [[(params[:per_page] || 30).to_i, 1].max, 100].min
 
     likes_average = params.fetch(:likes_average, 4.0)
     reviews_average = params.fetch(:reviews_average, 2.0)
