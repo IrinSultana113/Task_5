@@ -38,4 +38,32 @@ class MoviesController < ApplicationController
   rescue ArgumentError, Errno::ENOENT, JSON::ParserError
     render json: { error: "Invalid parameters" }, status: :bad_request
   end
+
+  def trailer
+    seed = params[:seed].presence || "589334323"
+    locale = params[:locale].presence || "en-US"
+    index = params[:index].to_i
+
+    unless %w[en-US de-DE].include?(locale) && index >= 0
+      return render json: { error: "Invalid parameters" },
+                    status: :bad_request
+    end
+
+    generator = MovieGenerator.new(seed: seed, locale: locale)
+    movie = generator.movie(index)
+
+    title = movie[:title] || movie["title"]
+
+    render json: {
+      trailer: TrailerGenerator.new(
+        seed: seed,
+        index: index,
+        title: title
+      ).call
+    }
+  rescue ArgumentError, Errno::ENOENT, JSON::ParserError, KeyError => e
+    Rails.logger.error("Trailer generation failed: #{e.message}")
+    render json: { error: "Could not generate trailer" },
+           status: :unprocessable_entity
+  end
 end

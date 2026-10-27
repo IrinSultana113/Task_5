@@ -20,13 +20,15 @@ class MovieGenerator
     Faker::Config.locale = @locale == "de-DE" ? :de : :en
     Faker::Config.random = movie_random
 
+    title = generate_title(index)
+
     {
       sequence: index,
-      title: generate_title(index),
+      title: title,
       year: movie_random.rand(1980..2026),
       genre: @config.fetch("genres").sample(random: movie_random),
       actors: generate_actors(index),
-      trailer: trailer_for(index),
+      trailer: nil,
       likes: random_count(likes_average, index, 1),
       reviews: generate_reviews(reviews_average, index)
     }
@@ -55,12 +57,13 @@ class MovieGenerator
     Array.new(3) { Faker::Name.name }
   end
 
-  def trailer_for(index)
-    trailers = %w[city_night.mp4 nature.mp4 action.mp4]
-    trailer = trailers.sample(random: Random.new(@seed + index * 997))
-
-    "/trailers/#{trailer}"
-  end
+  def trailer_for(index, title)
+  TrailerGenerator.new(
+    seed: @seed,
+    index: index,
+    title: title
+  ).call
+end
 
   def random_count(average, index, offset)
     value = [[Float(average), 0.0].max, 10.0].min

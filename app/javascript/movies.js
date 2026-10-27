@@ -17,7 +17,41 @@ let galleryPage = 1;
 let isLoading = false;
 let hasMore = true;
 
+async function loadTrailer(video, movie) {
+  if (video.dataset.loading === "true" ||
+      video.dataset.loaded === "true") return;
 
+  video.dataset.loading = "true";
+
+  const params = new URLSearchParams({
+    seed: seedInput.value || "589334323",
+    locale: localeInput.value
+  });
+
+  try {
+    video.closest(".trailer-container")?.querySelector(
+      ".trailer-status"
+    )?.replaceChildren("Generating trailer...");
+
+    const response = await fetch(
+      `/api/movies/${movie.sequence}/trailer?${params}`
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Trailer generation failed");
+    }
+
+    video.src = data.trailer;
+    video.load();
+    video.dataset.loaded = "true";
+  } catch (error) {
+    console.error(error);
+    alert("Could not load trailer. Please try again.");
+  } finally {
+    video.dataset.loading = "false";
+  }
+}
 async function loadMovies() {
   if (isLoading) return;
   isLoading = true;
@@ -148,7 +182,6 @@ function renderMovies(movies, append = false) {
                     width="480"
                     height="270"
                     style="width: 100%; height: auto; display: block;"
-                    src="${movie.trailer}">
                     Your browser does not support video playback.
                 </video>
                 <p><strong>${movie.title}</strong></p>
@@ -178,9 +211,17 @@ function renderMovies(movies, append = false) {
       detailsRow.appendChild(detailsCell);
       detailsRow.hidden = true;
 
+      const video = detailsCell.querySelector("video");
+
       row.addEventListener("click", () => {
-        detailsRow.hidden = !detailsRow.hidden;
+        const opening = detailsRow.hidden;
+        detailsRow.hidden = !opening;
+
+        if (opening) {
+          loadTrailer(video, movie);
+        }
       });
+
 
       tbody.appendChild(row);
       tbody.appendChild(detailsRow);
@@ -243,8 +284,13 @@ function renderMovies(movies, append = false) {
         if (event.target.closest(".movie-details")) return;
 
         const details = card.querySelector(".movie-details");
-        details.hidden = !details.hidden;
-      });
+        const opening = details.hidden;
+        details.hidden = !opening;
+
+        if (opening) {
+          loadTrailer(card.querySelector("video"), movie);
+      }
+    });
 
       gallery.appendChild(card);
     });
