@@ -16,7 +16,11 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 && \
+    apt-get install --no-install-recommends -y \
+      curl \
+      libjemalloc2 \
+      ffmpeg \
+      fonts-dejavu-core && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
