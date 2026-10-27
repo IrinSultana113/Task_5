@@ -8,26 +8,30 @@ class TrailerGenerator
   HEIGHT = 360
   DURATION = 6.0
   FPS = 24
+  CLIP_COUNT = 3
+  CLIP_DURATION = 13.0 / 6.0
+  TRANSITION_DURATION = 0.2
 
- SOURCES = %w[
-  public/trailers/optimized/action.mp4
-  public/trailers/optimized/car_chase.mp4
-  public/trailers/optimized/city_night.mp4
-  public/trailers/optimized/city_timelapse.mp4
-  public/trailers/optimized/nature.mp4
-  public/trailers/optimized/night_cars.mp4
-  public/trailers/optimized/police_chase.mp4
-  public/trailers/optimized/rain.mp4
-  public/trailers/optimized/rainy_city.mp4
-  public/trailers/optimized/rainy_street.mp4
-  public/trailers/optimized/space.mp4
-  public/trailers/optimized/urban_chase.mp4
-].freeze
+  SOURCES = %w[
+    public/trailers/optimized/action.mp4
+    public/trailers/optimized/car_chase.mp4
+    public/trailers/optimized/city_night.mp4
+    public/trailers/optimized/city_timelapse.mp4
+    public/trailers/optimized/nature.mp4
+    public/trailers/optimized/night_cars.mp4
+    public/trailers/optimized/police_chase.mp4
+    public/trailers/optimized/rain.mp4
+    public/trailers/optimized/rainy_city.mp4
+    public/trailers/optimized/rainy_street.mp4
+    public/trailers/optimized/space.mp4
+    public/trailers/optimized/urban_chase.mp4
+  ].freeze
 
   def initialize(seed:, index:, title:)
     @seed = Integer(seed)
     @index = Integer(index)
     @title = title.to_s
+
     raise ArgumentError, "Index must be non-negative" if @index.negative?
 
     @random = Random.new(@seed + @index * 997)
@@ -38,19 +42,22 @@ class TrailerGenerator
   end
 
   def call
-      source = selected_source
-      source_path = @root.join(source)
+    sources = selected_sources
 
-      raise "Missing trailer footage: #{source_path}" unless source_path.file?      
+    sources.each do |source|
+      path = @root.join(source)
+      raise "Missing trailer footage: #{path}" unless path.file?
+    end
 
     %w[cinematic.mp3 whoosh.mp3 impact.mp3].each do |file|
-      raise "Missing trailer audio: #{file}" unless @audio_dir.join(file).file?
+      path = @audio_dir.join(file)
+      raise "Missing trailer audio: #{path}" unless path.file?
     end
 
     FileUtils.mkdir_p(@output_dir)
 
     key = Digest::SHA256.hexdigest(
-      "#{@seed}:#{@index}:#{@title}:trailer-v4"
+      "#{@seed}:#{@index}:#{@title}:trailer-v6"
     )[0, 24]
 
     output = @output_dir.join("#{key}.mp4")
@@ -71,70 +78,71 @@ class TrailerGenerator
     text_filter_path = text_path.to_s.tr("\\", "/").gsub(":", "\\:")
     font_filter = font.tr("\\", "/").gsub(":", "\\:")
 
-    brightness = @random.rand(-0.06..0.04).round(3)
-    contrast = @random.rand(1.05..1.20).round(2)
-    saturation = @random.rand(0.85..1.25).round(2)
-    zoom = @random.rand(1.0..1.12).round(3)
-    speed = @random.rand(0.90..1.10).round(2)
+    filters = []
 
-    font_size = @random.rand(30..44)
-    title_position = @random.rand(0..2)
-    title_start = @random.rand(0.0..0.3).round(2)
-    fade_in = @random.rand(0.25..0.60).round(2)
+    CLIP_COUNT.times do |i|
+      brightness = @random.rand(-0.06..0.04).round(3)
+      contrast = @random.rand(1.05..1.20).round(2)
+      saturation = @random.rand(0.85..1.25).round(2)
+      zoom = @random.rand(1.02..1.10).round(3)
+      speed = @random.rand(0.90..1.10).round(2)
+
+      scaled_width = (WIDTH * zoom).ceil
+      scaled_height = (HEIGHT * zoom).ceil
+
+      filters << (
+        "[#{i}:v]" \
+        "trim=duration=#{(CLIP_DURATION * speed).round(4)}," \
+        "setpts=PTS/#{speed}," \
+        "fps=#{FPS}," \
+        "scale=#{scaled_width}:#{scaled_height}:" \
+        "force_original_aspect_ratio=increase," \
+        "crop=#{WIDTH}:#{HEIGHT}," \
+        "eq=contrast=#{contrast}:brightness=#{brightness}:" \
+        "saturation=#{saturation}," \
+        "setsar=1,format=yuv420p," \
+        "settb=AVTB,setpts=PTS-STARTPTS[v#{i}]"
+      )
+    end
+
+    filters << (
+      "[v0][v1]xfade=transition=fade:" \
+      "duration=#{TRANSITION_DURATION}:offset=1.9667[x1]"
+    )
+
+    filters << (
+      "[x1][v2]xfade=transition=fade:" \
+      "duration=#{TRANSITION_DURATION}:offset=3.9333," \
+      "trim=duration=#{DURATION},setpts=PTS-STARTPTS," \
+      "drawtext=fontfile='#{font_filter}':" \
+      "textfile='#{text_filter_path}':" \
+      "fontcolor=white:fontsize=40:" \
+      "borderw=2:bordercolor=black@0.8:" \
+      "shadowcolor=black@0.7:shadowx=2:shadowy=2:" \
+      "x=(w-text_w)/2:y=(h-text_h)/2:" \
+      "alpha='if(lt(t,0.25),t/0.25," \
+      "if(gt(t,5.5),(6-t)/0.5,1))'," \
+      "fade=t=in:st=0:d=0.25," \
+      "fade=t=out:st=5.5:d=0.5[vout]"
+    )
 
     music_volume = @random.rand(0.20..0.35).round(2)
     whoosh_delay = @random.rand(400..1400)
     impact_delay = @random.rand(3000..4200)
 
-    title_y = case title_position
-              when 0 then "(h-text_h)/2"
-              when 1 then "h*0.70-text_h/2"
-              else "h*0.28-text_h/2"
-              end
-
-    # Zoompan uses a deterministic frame counter.
-    zoom_filter = (
-      "zoompan=z='min(zoom+0.0005,#{zoom})':" \
-      "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':" \
-      "d=1:s=#{WIDTH}x#{HEIGHT}:fps=#{FPS}"
-    )
-
-    filters = []
-
     filters << (
-      "[0:v]" \
-      "trim=duration=#{DURATION * speed}," \
-      "setpts=PTS/#{speed}," \
-      "scale=#{WIDTH}:#{HEIGHT}:force_original_aspect_ratio=increase," \
-      "crop=#{WIDTH}:#{HEIGHT}," \
-      "fps=#{FPS}," \
-      "eq=contrast=#{contrast}:brightness=#{brightness}:saturation=#{saturation}," \
-      "#{zoom_filter}," \
-      "setsar=1,format=yuv420p," \
-      "drawtext=fontfile='#{font_filter}':textfile='#{text_filter_path}':" \
-      "fontcolor=white:fontsize=#{font_size}:" \
-      "borderw=2:bordercolor=black@0.8:" \
-      "shadowcolor=black@0.7:shadowx=2:shadowy=2:" \
-      "x=(w-text_w)/2:y=#{title_y}:" \
-      "alpha='if(lt(t,#{title_start}),0,if(lt(t,#{title_start + fade_in})," \
-      "(t-#{title_start})/#{fade_in},if(gt(t,5.5),(6.0-t)/0.5,1)))'," \
-      "fade=t=in:st=0:d=0.25," \
-      "fade=t=out:st=5.5:d=0.5[vout]"
-    )
-
-    filters << (
-      "[1:a]atrim=duration=#{DURATION}," \
+      "[3:a]atrim=duration=#{DURATION}," \
       "asetpts=PTS-STARTPTS,volume=#{music_volume}[music]"
     )
 
     filters << (
-      "[2:a]atrim=duration=1," \
+      "[4:a]atrim=duration=1," \
       "asetpts=PTS-STARTPTS,volume=0.65," \
       "adelay=#{whoosh_delay}|#{whoosh_delay}[whoosh]"
     )
 
     filters << (
-      "[3:a]atrim=duration=1.5," \
+      "[5:a]atrim=duration=1.5," \
       "asetpts=PTS-STARTPTS,volume=0.75," \
       "adelay=#{impact_delay}|#{impact_delay}[impact]"
     )
@@ -150,12 +158,12 @@ class TrailerGenerator
       "-filter_complex_threads", "1",
       "-threads", "1",
 
-      "-stream_loop", "-1",
-      "-i", source_path.to_s,
+      "-stream_loop", "-1", "-i", @root.join(sources[0]).to_s,
+      "-stream_loop", "-1", "-i", @root.join(sources[1]).to_s,
+      "-stream_loop", "-1", "-i", @root.join(sources[2]).to_s,
 
       "-stream_loop", "-1",
       "-i", @audio_dir.join("cinematic.mp3").to_s,
-
       "-i", @audio_dir.join("whoosh.mp3").to_s,
       "-i", @audio_dir.join("impact.mp3").to_s,
 
@@ -187,10 +195,18 @@ class TrailerGenerator
 
   private
 
-  def selected_source
-    # Same seed and index always select the same source.
-    SOURCES[Random.new(@seed + @index * 997).rand(SOURCES.length)]
+  
+  
+  def selected_sources
+    combinations = SOURCES.combination(CLIP_COUNT).to_a
+
+    position = (@seed.abs + @index * 997) % combinations.length
+    combination = combinations[position]
+
+    combination.shuffle(random: Random.new(@seed + @index * 997))
   end
+
+
 
   def safe_text(text)
     text.to_s.gsub(/[\r\n]/, " ").strip
