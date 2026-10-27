@@ -243,54 +243,67 @@ function renderMovies(movies, append = false) {
       card.className = "movie-card";
 
       card.innerHTML = `
-        <p class="sequence"></p>
+        <p class="sequence">#${movie.sequence + 1}</p>
         <h3></h3>
         <p class="movie-meta"></p>
         <p class="movie-actors"></p>
-
+        <button type="button" class="details-button">
+          View details
+        </button>
         <div class="movie-details" hidden>
-          <video controls preload="metadata"
-            tyle="width:100%; max-width:480px; height:auto;">
-          </video>
+          <div class="gallery-trailer">
+            <video controls preload="metadata"></video>
+          </div>
+
           <p class="movie-likes"></p>
           <div class="movie-reviews"></div>
         </div>
       `;
 
-      card.querySelector(".sequence").textContent =
-        `#${movie.sequence + 1}`;
       card.querySelector("h3").textContent = movie.title;
       card.querySelector(".movie-meta").textContent =
         `${movie.year} · ${movie.genre}`;
       card.querySelector(".movie-actors").textContent =
         `Actors: ${movie.actors.join(", ")}`;
 
-      card.querySelector("video").src = movie.trailer;
       card.querySelector(".movie-likes").textContent =
         `Likes: ${movie.likes}`;
 
-      const reviewsContainer = card.querySelector(".movie-reviews");
-      const reviewsHeading = document.createElement("strong");
+      const video = card.querySelector("video");
+      const reviewsContainer =
+        card.querySelector(".movie-reviews");
+      const reviewsHeading =
+        document.createElement("strong");
       reviewsHeading.textContent = "Reviews:";
       reviewsContainer.appendChild(reviewsHeading);
 
       movie.reviews.forEach((review) => {
         const reviewItem = document.createElement("p");
-        reviewItem.textContent = `${review.author}: ${review.text}`;
+
+        reviewItem.textContent =
+          `${review.author}: ${review.text}`;
+
         reviewsContainer.appendChild(reviewItem);
       });
 
-      card.addEventListener("click", (event) => {
-        if (event.target.closest(".movie-details")) return;
+      const detailsButton =
+        card.querySelector(".details-button");
 
-        const details = card.querySelector(".movie-details");
+      detailsButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+
+        const details =
+          card.querySelector(".movie-details");
+
         const opening = details.hidden;
         details.hidden = !opening;
 
+        detailsButton.textContent =
+          opening ? "Hide details" : "View details";
         if (opening) {
-          loadTrailer(card.querySelector("video"), movie);
-      }
-    });
+          loadTrailer(video, movie);
+        }
+      });
 
       gallery.appendChild(card);
     });
@@ -312,7 +325,7 @@ randomSeedButton.addEventListener("click", () => {
     (BigInt(bytes[0] & 0xffff) << 32n) | BigInt(bytes[1]);
 
   seedInput.value = randomSeed.toString();
-
+  console.log("Generated seed:", seedInput.value);
   currentPage = 1;
   loadMovies();
 });
@@ -347,3 +360,27 @@ window.addEventListener("scroll", () => {
   }
 });
 loadMovies();
+
+
+document.querySelectorAll(".number-buttons button").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    const input = document.getElementById(button.dataset.target);
+    if (!input) return;
+
+    const step = Number(button.dataset.step);
+    const min = Number(input.min || 0);
+    const max = input.max === "" ? Infinity : Number(input.max);
+    const current = Number(input.value || 0);
+    const decimals = (input.step.split(".")[1] || "").length;
+
+    input.value = Math.min(
+      max,
+      Math.max(min, current + step)
+    ).toFixed(decimals);
+
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+});
+

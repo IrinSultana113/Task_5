@@ -1,10 +1,442 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+  background: #f5f7fa;
+  color: #1f2937;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 0 0 6px;
+  font-size: 32px;
+  color: #1e293b;
+}
+
+.page-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.control-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+input,
+select,
+button {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+input,
+select {
+  background: #fff;
+  color: #1f2937;
+}
+
+button {
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#random-seed {
+  margin-bottom: 0;
+}
+
+.view-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.view-buttons button.active {
+  background: #334155;
+  color: #fff;
+  border-color: #334155;
+}
+
+/* Status and pagination */
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin: 18px 0 12px;
+}
+
+#status {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+#pagination {
+  display: flex;
+  gap: 7px;
+}
+
+/* Table */
+#movie-container {
+  width: 100%;
+}
+
+#movie-container > table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+#movie-container th {
+  padding: 13px 14px;
+  text-align: left;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#movie-container td {
+  padding: 12px 14px;
+  border-top: 1px solid #edf1f5;
+  font-size: 14px;
+}
+
+#movie-container tbody tr:not([hidden]):hover {
+  background: #f8fafc;
+}
+
+#movie-container tbody tr {
+  cursor: pointer;
+}
+
+/* Expanded table details */
+.movie-details-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: #f8fafc;
+}
+
+.trailer-container {
+  flex: 0 0 480px;
+  max-width: 100%;
+}
+
+.trailer-container video {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border-radius: 8px;
+  background: #111827;
+}
+
+.trailer-container p {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.movie-info {
+  flex: 1;
+  min-width: 250px;
+}
+
+.movie-info h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.movie-info p {
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* Gallery */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.movie-card {
+  align-self: start;
+  min-width: 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.movie-card:hover {
+  border-color: #cbd5e1;
+}
+
+.movie-card h3 {
+  margin: 8px 0;
+}
+
+.movie-meta {
+  color: #64748b;
+}
+
+.movie-actors {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Details button */
+.details-button {
+  width: 100%;
+  margin-top: 12px;
+  background: #334155;
+  color: #fff;
+  border-color: #334155;
+  font-weight: 600;
+}
+
+.details-button:hover {
+  background: #1e293b;
+}
+
+.movie-details[hidden] {
+  display: none;
+}
+
+.movie-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.movie-details video,
+.gallery-trailer video {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border-radius: 8px;
+  background: #111827;
+}
+
+.movie-likes {
+  margin-top: 14px;
+  font-weight: 600;
+}
+
+.movie-reviews {
+  margin-top: 12px;
+}
+
+.movie-reviews p {
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-left: 3px solid #cbd5e1;
+  line-height: 1.5;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  body {
+    padding: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 26px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .control-group,
+  .control-group input,
+  .control-group select,
+  .view-buttons,
+  .view-buttons button,
+  #random-seed {
+    width: 100%;
+  }
+
+  .toolbar input[type="number"] {
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 16px;
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+
+  .toolbar input[type="number"]::-webkit-inner-spin-button,
+  .toolbar input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    -webkit-appearance: inner-spin-button;
+  }
+
+  .view-buttons {
+    flex-direction: row;
+  }
+
+  .view-buttons button {
+    flex: 1;
+  }
+
+  .status-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #pagination {
+    width: 100%;
+  }
+
+  #pagination button {
+    flex: 1;
+  }
+
+  /* Keep table horizontally scrollable */
+  #movie-container {
+    overflow-x: auto;
+  }
+
+  #movie-container > table {
+    min-width: 700px;
+  }
+
+  .movie-details-layout {
+    flex-direction: column;
+  }
+
+  .trailer-container {
+    flex: none;
+    width: 100%;
+  }
+
+  .movie-info {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .movie-card {
+    min-width: 0;
+    width: 100%;
+  }
+}
+.number-input {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.number-input input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+}
+
+.number-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.number-buttons button {
+  min-height: 18px;
+  height: 18px;
+  padding: 0 8px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+@media (max-width: 700px) {
+  .number-input {
+    width: 100%;
+  }
+
+  .number-buttons button {
+    min-height: 21px;
+    height: 21px;
+  }
+}
+/* Hide custom arrows on laptop/desktop */
+@media (min-width: 701px) {
+  .number-buttons {
+    display: none;
+  }
+}
+#seed {
+  color: #1f2937;
+  background-color: #fff;
+  min-width: 150px;
+  opacity: 1;
+  -webkit-text-fill-color: #1f2937;
+}

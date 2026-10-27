@@ -1,34 +1,68 @@
-
 <div class="container">
-  <header class="toolbar">
+  <header class="page-header">
     <h1>Movie Store</h1>
+    <p>Explore randomly generated movies and trailers</p>
+  </header>
 
-    <label for="locale">Language</label>
-    <select id="locale">
-      <option value="en-US">English (US)</option>
-      <option value="de-DE">German (Germany)</option>
-    </select>
+  <section class="toolbar">
+    <div class="control-group">
+      <label for="locale">Language</label>
+      <select id="locale">
+        <option value="en-US">English (US)</option>
+        <option value="de-DE">German (Germany)</option>
+      </select>
+    </div>
 
-    <label for="seed">Seed</label>
+    <div class="control-group number-control">
+  <label for="seed">Seed</label>
+  <div class="number-input">
     <input id="seed" type="number" min="0" value="589334323">
+    <div class="number-buttons">
+      <button type="button" data-target="seed" data-step="1">▲</button>
+      <button type="button" data-target="seed" data-step="-1">▼</button>
+    </div>
+  </div>
+</div>
 
     <button id="random-seed" type="button">Random seed</button>
 
-    <label for="likes">Likes average</label>
+    <div class="control-group number-control">
+  <label for="likes">Likes average</label>
+  <div class="number-input">
     <input id="likes" type="number" min="0" max="10" step="0.1" value="4">
-
-    <label for="reviews">Reviews average</label>
-    <input id="reviews" type="number" min="0" max="10" step="0.1" value="2">
-
-    <button id="table-view" type="button">Table View</button>
-    <button id="gallery-view" type="button">Gallery View</button>
-  </header>
-
-  <p id="status">Movie Store is ready.</p>
-  <div id="pagination">
-    <button id="previous-page" type="button">Previous</button>
-    <button id="next-page" type="button">Next</button>
+    <div class="number-buttons">
+      <button type="button" data-target="likes" data-step="0.1">▲</button>
+      <button type="button" data-target="likes" data-step="-0.1">▼</button>
+    </div>
   </div>
+</div>
+
+    <div class="control-group number-control">
+  <label for="reviews">Reviews average</label>
+  <div class="number-input">
+    <input id="reviews" type="number" min="0" max="10" step="0.1" value="2">
+    <div class="number-buttons">
+      <button type="button" data-target="reviews" data-step="0.1">▲</button>
+      <button type="button" data-target="reviews" data-step="-0.1">▼</button>
+    </div>
+  </div>
+</div>
+
+    <div class="view-buttons">
+      <button id="table-view" type="button" class="active">Table View</button>
+      <button id="gallery-view" type="button">Gallery View</button>
+    </div>
+  </section>
+
+  <div class="status-row">
+    <p id="status">Movie Store is ready.</p>
+
+    <div id="pagination">
+      <button id="previous-page" type="button">Previous</button>
+      <button id="next-page" type="button">Next</button>
+    </div>
+  </div>
+
   <main id="movie-container">
     Loading movies...
   </main>

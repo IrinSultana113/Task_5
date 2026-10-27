@@ -42,12 +42,21 @@ class MoviesController < ApplicationController
   def trailer
     seed = params[:seed].presence || "589334323"
     locale = params[:locale].presence || "en-US"
-    index = params[:index].to_i
+    
+    raw_index = params[:index].to_s
 
-    unless %w[en-US de-DE].include?(locale) && index >= 0
+    unless raw_index.match?(/\A\d+\z/)
       return render json: { error: "Invalid parameters" },
-                    status: :bad_request
+                status: :bad_request
     end
+
+    index = raw_index.to_i
+
+    unless %w[en-US de-DE].include?(locale)
+    return render json: { error: "Invalid parameters" },
+                status: :bad_request
+    end
+
 
     generator = MovieGenerator.new(seed: seed, locale: locale)
     movie = generator.movie(index)

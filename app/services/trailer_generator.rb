@@ -15,7 +15,7 @@ class TrailerGenerator
     @index = Integer(index)
     @title = title.to_s
     @random = Random.new(@seed + @index * 997)
-
+    raise ArgumentError, "Index must be non-negative" if @index.negative?
     @root = Rails.root
     @source_dir = @root.join("public/trailers")
     @audio_dir = @source_dir.join("audio")
