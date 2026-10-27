@@ -9,8 +9,7 @@ class TrailerGenerator
   DURATION = 6.0
   FPS = 24
   CLIP_COUNT = 3
-  CLIP_DURATION = 13.0 / 6.0
-  TRANSITION_DURATION = 0.2
+  CLIP_DURATION = 2.0
 
   SOURCES = %w[
     public/trailers/optimized/action.mp4
@@ -57,7 +56,7 @@ class TrailerGenerator
     FileUtils.mkdir_p(@output_dir)
 
     key = Digest::SHA256.hexdigest(
-      "#{@seed}:#{@index}:#{@title}:trailer-v7"
+      "#{@seed}:#{@index}:#{@title}:trailer-v8"
     )[0, 24]
 
     output = @output_dir.join("#{key}.mp4")
@@ -67,7 +66,7 @@ class TrailerGenerator
     end
 
     ffmpeg = ENV.fetch("FFMPEG_PATH", "ffmpeg")
-    font = windows_font_path
+    font = font_path
 
     work_dir = @root.join("tmp/trailer_work", key)
     FileUtils.mkdir_p(work_dir)
@@ -81,18 +80,17 @@ class TrailerGenerator
     filters = []
 
     CLIP_COUNT.times do |i|
-      brightness = @random.rand(-0.06..0.04).round(3)
-      contrast = @random.rand(1.05..1.20).round(2)
-      saturation = @random.rand(0.85..1.25).round(2)
-      zoom = @random.rand(1.02..1.10).round(3)
-      speed = @random.rand(0.90..1.10).round(2)
+      brightness = @random.rand(-0.04..0.03).round(3)
+      contrast = @random.rand(1.05..1.15).round(2)
+      saturation = @random.rand(0.90..1.20).round(2)
+      speed = @random.rand(0.95..1.05).round(2)
+      zoom = @random.rand(1.02..1.08).round(3)
 
       scaled_width = (WIDTH * zoom).ceil
       scaled_height = (HEIGHT * zoom).ceil
 
       filters << (
         "[#{i}:v]" \
-        "trim=duration=#{(CLIP_DURATION * speed).round(4)}," \
         "setpts=PTS/#{speed}," \
         "fps=#{FPS}," \
         "scale=#{scaled_width}:#{scaled_height}:" \
@@ -101,34 +99,28 @@ class TrailerGenerator
         "eq=contrast=#{contrast}:brightness=#{brightness}:" \
         "saturation=#{saturation}," \
         "setsar=1,format=yuv420p," \
-        "settb=AVTB,setpts=PTS-STARTPTS," \
-        "fps=#{FPS},settb=1/#{FPS}," \
+        "trim=duration=#{CLIP_DURATION}," \
+        "settb=1/#{FPS},setpts=N," \
+        "trim=end_frame=#{(CLIP_DURATION * FPS).to_i}," \
         "setpts=PTS-STARTPTS[v#{i}]"
       )
     end
 
     filters << (
-      "[v0][v1]xfade=transition=fade:" \
-      "duration=#{TRANSITION_DURATION}:offset=1.9667[x1]"
-    )
-
-    filters << (
-      "[x1][v2]xfade=transition=fade:" \
-      "duration=#{TRANSITION_DURATION}:offset=3.9333," \
-      "trim=duration=#{DURATION},setpts=PTS-STARTPTS," \
+      "[v0][v1][v2]concat=n=3:v=1:a=0," \
+      "trim=duration=#{DURATION}," \
+      "settb=1/#{FPS},setpts=PTS-STARTPTS," \
       "drawtext=fontfile='#{font_filter}':" \
       "textfile='#{text_filter_path}':" \
       "fontcolor=white:fontsize=40:" \
       "borderw=2:bordercolor=black@0.8:" \
       "shadowcolor=black@0.7:shadowx=2:shadowy=2:" \
-      "x=(w-text_w)/2:y=(h-text_h)/2:" \
-      "alpha='if(lt(t,0.25),t/0.25," \
-      "if(gt(t,5.5),(6-t)/0.5,1))'," \
+      "x=(w-text_w)/2:y=(h-text_h)/2," \
       "fade=t=in:st=0:d=0.25," \
       "fade=t=out:st=5.5:d=0.5[vout]"
     )
 
-    music_volume = @random.rand(0.20..0.35).round(2)
+    music_volume = @random.rand(0.20..0.30).round(2)
     whoosh_delay = @random.rand(400..1400)
     impact_delay = @random.rand(3000..4200)
 
@@ -152,7 +144,8 @@ class TrailerGenerator
     filters << (
       "[music][whoosh][impact]" \
       "amix=inputs=3:duration=first:normalize=0," \
-      "atrim=duration=#{DURATION}[aout]"
+      "atrim=duration=#{DURATION}," \
+      "asetpts=PTS-STARTPTS[aout]"
     )
 
     args = [
@@ -173,10 +166,12 @@ class TrailerGenerator
       "-map", "[vout]",
       "-map", "[aout]",
       "-t", DURATION.to_s,
+      "-r", FPS.to_s,
       "-c:v", "libx264",
       "-threads", "1",
       "-preset", "ultrafast",
       "-crf", "28",
+      "-pix_fmt", "yuv420p",
       "-c:a", "aac",
       "-b:a", "96k",
       "-movflags", "+faststart",
@@ -187,7 +182,7 @@ class TrailerGenerator
 
     unless status.success? && output.file? && output.size.positive?
       FileUtils.rm_f(output)
-      raise "FFmpeg trailer generation failed: #{stderr.lines.last(15).join}"
+      raise "FFmpeg trailer generation failed: #{stderr.lines.last(20).join}"
     end
 
     "/trailers/generated/#{key}.mp4"
@@ -197,24 +192,19 @@ class TrailerGenerator
 
   private
 
-  
-  
   def selected_sources
     combinations = SOURCES.combination(CLIP_COUNT).to_a
-
     position = (@seed.abs + @index * 997) % combinations.length
-    combination = combinations[position]
-
-    combination.shuffle(random: Random.new(@seed + @index * 997))
+    combinations[position].shuffle(
+      random: Random.new(@seed + @index * 997)
+    )
   end
-
-
 
   def safe_text(text)
     text.to_s.gsub(/[\r\n]/, " ").strip
   end
 
-  def windows_font_path
+  def font_path
     candidates =
       if Gem.win_platform?
         [
