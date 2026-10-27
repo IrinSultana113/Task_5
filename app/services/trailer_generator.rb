@@ -9,14 +9,20 @@ class TrailerGenerator
   DURATION = 6.0
   FPS = 24
 
-  SOURCES = %w[
-    action.mp4
-    city_night.mp4
-    nature.mp4
-    car_chase.mp4
-    rain.mp4
-    space.mp4
-  ].freeze
+ SOURCES = %w[
+  action.mp4
+  city_night.mp4
+  nature.mp4
+  car_chase.mp4
+  rain.mp4
+  space.mp4
+  city_timelapse.mp4
+  rainy_city.mp4
+  rainy_street.mp4
+  police_chase.mp4
+  urban_chase.mp4
+  night_cars.mp4
+].freeze
 
   def initialize(seed:, index:, title:)
     @seed = Integer(seed)
