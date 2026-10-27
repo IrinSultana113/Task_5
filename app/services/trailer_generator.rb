@@ -57,7 +57,7 @@ class TrailerGenerator
     FileUtils.mkdir_p(@output_dir)
 
     key = Digest::SHA256.hexdigest(
-      "#{@seed}:#{@index}:#{@title}:trailer-v6"
+      "#{@seed}:#{@index}:#{@title}:trailer-v7"
     )[0, 24]
 
     output = @output_dir.join("#{key}.mp4")
@@ -101,7 +101,9 @@ class TrailerGenerator
         "eq=contrast=#{contrast}:brightness=#{brightness}:" \
         "saturation=#{saturation}," \
         "setsar=1,format=yuv420p," \
-        "settb=AVTB,setpts=PTS-STARTPTS[v#{i}]"
+        "settb=AVTB,setpts=PTS-STARTPTS," \
+        "fps=#{FPS},settb=1/#{FPS}," \
+        "setpts=PTS-STARTPTS[v#{i}]"
       )
     end
 
