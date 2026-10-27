@@ -125,6 +125,7 @@ class TrailerGenerator
 
     args = [
       ffmpeg, "-y",
+        "-filter_complex_threads", "1",
 
       # Three source videos, each looped if needed.
       "-stream_loop", "-1", "-i", @source_dir.join(sources[0]).to_s,
@@ -141,8 +142,9 @@ class TrailerGenerator
       "-map", "[aout]",
       "-t", DURATION.to_s,
       "-c:v", "libx264",
-      "-preset", "veryfast",
-      "-crf", "23",
+      "-threads", "1",
+      "-preset", "ultrafast",
+      "-crf", "26",
       "-c:a", "aac",
       "-b:a", "160k",
       "-movflags", "+faststart",
