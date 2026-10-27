@@ -26,3 +26,4 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+/public/trailers/generated/*.mp4
