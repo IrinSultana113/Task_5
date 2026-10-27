@@ -10,18 +10,18 @@ class TrailerGenerator
   FPS = 24
 
  SOURCES = %w[
-  action.mp4
-  city_night.mp4
-  nature.mp4
-  car_chase.mp4
-  rain.mp4
-  space.mp4
-  city_timelapse.mp4
-  rainy_city.mp4
-  rainy_street.mp4
-  police_chase.mp4
-  urban_chase.mp4
-  night_cars.mp4
+  public/trailers/optimized/action.mp4
+  public/trailers/optimized/car_chase.mp4
+  public/trailers/optimized/city_night.mp4
+  public/trailers/optimized/city_timelapse.mp4
+  public/trailers/optimized/nature.mp4
+  public/trailers/optimized/night_cars.mp4
+  public/trailers/optimized/police_chase.mp4
+  public/trailers/optimized/rain.mp4
+  public/trailers/optimized/rainy_city.mp4
+  public/trailers/optimized/rainy_street.mp4
+  public/trailers/optimized/space.mp4
+  public/trailers/optimized/urban_chase.mp4
 ].freeze
 
   def initialize(seed:, index:, title:)
@@ -38,9 +38,10 @@ class TrailerGenerator
   end
 
   def call
-    source = selected_source
+      source = selected_source
+      source_path = @root.join(source)
 
-    raise "Missing trailer footage: #{source}" unless @source_dir.join(source).file?
+      raise "Missing trailer footage: #{source_path}" unless source_path.file?      
 
     %w[cinematic.mp3 whoosh.mp3 impact.mp3].each do |file|
       raise "Missing trailer audio: #{file}" unless @audio_dir.join(file).file?
@@ -150,7 +151,7 @@ class TrailerGenerator
       "-threads", "1",
 
       "-stream_loop", "-1",
-      "-i", @source_dir.join(source).to_s,
+      "-i", source_path.to_s,
 
       "-stream_loop", "-1",
       "-i", @audio_dir.join("cinematic.mp3").to_s,
