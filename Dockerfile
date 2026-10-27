@@ -85,4 +85,5 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 #EXPOSE 80
 #CMD ["./bin/thrust", "./bin/rails", "server"]
 EXPOSE 10000
+ENV HTTP_PORT=10000
 CMD ["./bin/thrust", "./bin/rails", "server"]
